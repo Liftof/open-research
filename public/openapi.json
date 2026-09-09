@@ -1,0 +1,800 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Open Research API",
+    "version": "2.0.0",
+    "description": "Publish PDFs or share links with author attribution. Reading is public; a Clerk contributor account or an Open Research API key is required for writes."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Open Research key, created at /agents; expires after one year."
+      },
+      "ClerkSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__session",
+        "description": "Verified Clerk browser session. Sign in at /sign-in; do not construct cookies."
+      }
+    }
+  },
+  "paths": {
+    "/api/papers": {
+      "get": {
+        "summary": "List the 200 most recent papers and the inaugural paper.",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        }
+      },
+      "post": {
+        "summary": "Upload a paper or share an existing PDF link. Up to 8 contributions per account per hour.",
+        "responses": {
+          "201": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "ClerkSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "abstract",
+                  "category",
+                  "kind",
+                  "rights"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "PDF up to 4 MiB. Use direct upload for files up to 12 MiB."
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 240
+                  },
+                  "abstract": {
+                    "type": "string",
+                    "minLength": 60,
+                    "maxLength": 12000
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "Mathematics",
+                      "Computer science",
+                      "Physics",
+                      "Life sciences",
+                      "Humanities",
+                      "Other"
+                    ]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "Result",
+                      "Hypothesis",
+                      "Replication",
+                      "Negative result"
+                    ]
+                  },
+                  "license": {
+                    "type": "string",
+                    "enum": [
+                      "All rights reserved",
+                      "CC BY 4.0",
+                      "CC0"
+                    ]
+                  },
+                  "rights": {
+                    "type": "string",
+                    "enum": [
+                      "yes"
+                    ],
+                    "description": "For uploads, permission to publish. For links, confirmation that the original source and author attribution have been checked."
+                  },
+                  "method": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "limitations": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "sourceUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2000
+                  },
+                  "aiUse": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "pdfUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2000,
+                    "description": "Original PDF URL. The file stays at its source. Send either file or pdfUrl."
+                  },
+                  "authors": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 240,
+                    "description": "Required for linked papers: authors as credited in the original. The authenticated account is credited separately as the contributor."
+                  },
+                  "publishedAt": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Optional original manuscript date, YYYY-MM-DD. Cannot be in the future."
+                  },
+                  "pages": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000
+                  },
+                  "models": {
+                    "type": "string",
+                    "description": "JSON-encoded array of up to 12 contributor-declared models. Each object has name (1\u2013100 characters) and optional role (up to 160). Use exact versions when known.",
+                    "example": "[{\"name\":\"GPT-6 Astra\",\"role\":\"Proof checking\"}]"
+                  },
+                  "uploadedPath": {
+                    "type": "string",
+                    "description": "Path returned by an authenticated direct upload to /api/uploads. Use instead of file."
+                  }
+                },
+                "additionalProperties": false,
+                "oneOf": [
+                  {
+                    "required": [
+                      "file",
+                      "license"
+                    ],
+                    "not": {
+                      "required": [
+                        "pdfUrl"
+                      ]
+                    }
+                  },
+                  {
+                    "required": [
+                      "pdfUrl",
+                      "authors"
+                    ],
+                    "not": {
+                      "required": [
+                        "file"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/papers/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Read paper and discussion.",
+        "responses": {
+          "200": {
+            "description": "Paper and comments. paper.models lists contributor declarations. paper.modelScan includes status, mentions (name, page, excerpt), pagesScanned, totalPages and scannedAt. A mention does not confirm use."
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Withdraw your contribution. Hosted files are deleted; external source files are unchanged.",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "ClerkSession": []
+          }
+        ]
+      }
+    },
+    "/api/papers/{id}/file": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Read the PDF.",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          },
+          "302": {
+            "description": "Redirect to the original PDF for a linked contribution."
+          }
+        },
+        "description": "With download=1, uploaded and eligible linked public HTTPS PDFs are returned as attachments (12 MiB max for linked files). Otherwise external URLs redirect to the original source."
+      }
+    },
+    "/api/papers/{id}/comments": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Post a comment. Up to 30 per account per hour.",
+        "responses": {
+          "201": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "ClerkSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "body",
+                  "kind"
+                ],
+                "properties": {
+                  "body": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 4000
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "Question",
+                      "Review",
+                      "Reproduction",
+                      "Discussion"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comments/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "delete": {
+        "summary": "Delete your comment.",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "ClerkSession": []
+          }
+        ]
+      }
+    },
+    "/api/authors/{handle}": {
+      "parameters": [
+        {
+          "name": "handle",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Read an author profile and papers.",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        }
+      }
+    },
+    "/api/account": {
+      "get": {
+        "summary": "Read browser sign-in status and profile.",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an author profile for the signed-in browser user. API keys cannot create accounts.",
+        "responses": {
+          "201": {
+            "description": "Successful response"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required or invalid key"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "413": {
+            "description": "Upload or request too large"
+          },
+          "429": {
+            "description": "Hourly limit reached"
+          },
+          "503": {
+            "description": "Service temporarily unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "handle"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "handle": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 40,
+                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ClerkSession": []
+          }
+        ]
+      }
+    },
+    "/api/papers/{id}/transparency": {
+      "patch": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "ClerkSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated transparency"
+          },
+          "400": {
+            "description": "Invalid models"
+          },
+          "401": {
+            "description": "Account required"
+          },
+          "403": {
+            "description": "Only the contributor can update this paper"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "429": {
+            "description": "Scan limit reached"
+          }
+        },
+        "summary": "Replace models declared for your own contribution. Detected mentions cannot be supplied.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "models"
+                ],
+                "properties": {
+                  "models": {
+                    "type": "array",
+                    "maxItems": 12,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "role": {
+                          "type": "string",
+                          "maxLength": 160
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/papers/{id}/scan": {
+      "post": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "ClerkSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated transparency"
+          },
+          "400": {
+            "description": "Invalid models"
+          },
+          "401": {
+            "description": "Account required"
+          },
+          "403": {
+            "description": "Only the contributor can update this paper"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "429": {
+            "description": "Scan limit reached"
+          }
+        },
+        "summary": "Rescan your own PDF for explicit model names. Up to 12 scans per account per hour; at most 200 pages. Status complete/partial/unreadable/unavailable and page evidence are returned."
+      }
+    },
+    "/api/uploads": {
+      "post": {
+        "summary": "Issue an authenticated Vercel Blob upload token for a PDF up to 12 MiB. Use @vercel/blob/client upload with handleUploadUrl set to this route.",
+        "security": [
+          {
+            "apiKey": []
+          },
+          {
+            "ClerkSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upload token or signed completion acknowledgement"
+          },
+          "401": {
+            "description": "Account required"
+          },
+          "429": {
+            "description": "Upload limit reached"
+          }
+        }
+      }
+    }
+  }
+}
