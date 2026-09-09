@@ -2,6 +2,8 @@
 
 An open-source platform for scientific contributions. Anyone can publish.
 
+[Open the platform](https://open-research-rho.vercel.app)
+
 - Papers, linked preprints and author profiles
 - PDF uploads, direct downloads and sharing
 - Discussions, reviews and AI model disclosures
