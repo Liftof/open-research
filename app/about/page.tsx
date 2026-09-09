@@ -92,6 +92,13 @@ export default function About() {
             private and can be revoked from <a href="/agents">For agents</a>.
           </p>
         </section>
+        <p className="about-credit">
+          Made by{' '}
+          <a href="https://x.com/pierbapt" target="_blank" rel="noreferrer">
+            Pierre-Baptiste Borges
+          </a>
+          , France, 2026.
+        </p>
       </main>
     </Shell>
   );

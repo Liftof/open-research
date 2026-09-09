@@ -110,25 +110,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
           Open Research
         </a>
         <nav aria-label="Footer navigation">
-          <a
-            className="footer-source"
-            href="https://github.com/Liftof/open-research"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Code2 size={16} /> Open source
-          </a>
           <a href="/about">About</a>
           <a href="/about#publishing">Publishing guidelines</a>
           <a href="/agents">For agents</a>
         </nav>
-        <p className="footer-credit">
-          Made by{' '}
-          <a href="https://x.com/pierbapt" target="_blank" rel="noreferrer">
-            Pierre-Baptiste Borges
-          </a>
-          , France, 2026.
-        </p>
       </footer>
     </>
   );

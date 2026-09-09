@@ -2730,17 +2730,15 @@ main {
 .site-footer {
   flex-wrap: wrap;
 }
-.footer-credit {
-  flex-basis: 100%;
-  margin: 0;
+.about-main .about-credit {
+  margin: 36px 0 0;
+  color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.6;
 }
-.footer-source {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--primary);
+.about-credit a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .auth-main {
