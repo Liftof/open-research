@@ -1,3 +1,4 @@
+import Script from 'next/script';
 import { Shell } from '../research-app';
 export const metadata = {
   title: 'About',
@@ -99,6 +100,15 @@ export default function About() {
           </a>
           , France, 2026.
         </p>
+        <section aria-label="Audience privacy">
+        <details id="mesure-audience"><summary>Audience privacy</summary>
+          <p>This page counts views for site statistics. The counter receives a fixed site and page key. The dashboard shows daily totals for up to 90 days.</p>
+          <p>Vercel processes the connection metadata needed for the request. The counter uses no tracking cookies or identifiers. Your browser can remember your opt-out choice.</p>
+          <p><a id="audience-opt-out" href="/about?audience=off#mesure-audience">Opt out of measurement</a> <span id="audience-status" role="status" /></p>
+          <p><a href="https://pierrebaptiste.me/about/">Contact the publisher</a></p>
+        </details>
+        </section>
+        <Script id="pb-audience-install" src="/audience-install-v1.js" strategy="afterInteractive" />
       </main>
     </Shell>
   );
