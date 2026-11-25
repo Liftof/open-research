@@ -50,7 +50,7 @@
 
   if (globalThis.pbAudienceDisabled || privacySignal || params.has('embed')) return;
   const counter = document.createElement('script');
-  counter.src = '/audience-v1.js';
+  counter.src = '/audience-v1.1.js';counter.dataset.origin='https://open-research-rho.vercel.app';
   counter.async = true;
   counter.fetchPriority = 'low';
   Object.assign(counter.dataset, {
